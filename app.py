@@ -246,20 +246,7 @@ with tab_schedule:
         schedule_items = fetch_schedule()
 
     if schedule_items and not schedule_items[0]["home"].startswith("[오류]"):
-        current_date = None
         for item in schedule_items:
-            # 날짜 그룹 헤더
-            item_date = item.get("date", "")
-            if item_date and item_date != current_date:
-                current_date = item_date
-                st.markdown(
-                    f'<div style="margin:18px 0 6px;padding:6px 12px;'
-                    f'background:#2a2f45;border-radius:6px;'
-                    f'color:#f0f0f0;font-weight:700;font-size:0.95rem;">'
-                    f'📆 {current_date}</div>',
-                    unsafe_allow_html=True,
-                )
-
             status_color = {"종료": "#888", "예정": "#1a3c6e", "진행중": "#c8102e"}.get(item["status"], "#444")
             link_html = f'<a href="{item["url"]}" target="_blank" style="text-decoration:none;color:inherit;">' if item.get("url") else ""
             link_close = "</a>" if item.get("url") else ""
