@@ -1,0 +1,26 @@
+# 민감정보 - 절대 커밋 금지
+.env
+*.env
+.streamlit/secrets.toml
+
+# 벡터 DB (클라우드에서 자동 재구축)
+chroma_db/
+
+# 가상환경
+.venv/
+venv/
+__pycache__/
+*.pyc
+*.pyo
+
+# macOS
+.DS_Store
+
+# IDE
+.vscode/
+.idea/
+.claude/
+
+# 임시 파일
+*.tmp
+*.log
