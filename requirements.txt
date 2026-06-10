@@ -16,10 +16,6 @@ huggingface-hub>=0.33.4,<1.0
 
 chromadb>=0.5.20,<0.6
 pypdf>=5.0,<6
-protobuf>=4.25,<5
 
 playwright>=1.44,<2
 beautifulsoup4>=4.12,<5
-
-opentelemetry-proto>=1.27,<2
-opentelemetry-exporter-otlp-proto-grpc>=1.27,<2
