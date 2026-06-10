@@ -85,6 +85,17 @@ def fetch_schedule() -> List[Dict]:
     try:
         with sync_playwright() as p:
             browser, page = _open_page(p, SCHEDULE_URL)
+
+            # 스크롤해서 여러 날짜 경기 로드 (무한 스크롤 대응)
+            prev_count = 0
+            for _ in range(12):
+                page.evaluate("window.scrollBy(0, window.innerHeight)")
+                page.wait_for_timeout(900)
+                curr_count = len(page.query_selector_all('[class*="MatchBox_match_item"]'))
+                if curr_count == prev_count and _ >= 4:
+                    break
+                prev_count = curr_count
+
             items = page.query_selector_all('[class*="MatchBox_match_item"]')
             for el in items:
                 teams    = el.query_selector_all('[class*="MatchBoxHeadToHeadArea_team_name"]')
@@ -95,20 +106,43 @@ def fetch_schedule() -> List[Dict]:
                 home = teams[0].inner_text().strip() if len(teams) > 0 else ""
                 away = teams[1].inner_text().strip() if len(teams) > 1 else ""
                 raw_time   = time_el.inner_text().strip() if time_el else ""
-                # "경기 시간\n04:00" → "04:00" 로 정리
                 time_txt   = raw_time.split("\n")[-1].strip() if "\n" in raw_time else raw_time
                 status_txt = status.inner_text().strip() if status else ""
                 group_txt  = add_info.inner_text().strip() if add_info else ""
                 match_url  = _abs(link_el.get_attribute("href") or "") if link_el else ""
+
+                # 부모 DOM에서 날짜 헤더 추출
+                date_txt = page.evaluate(
+                    """el => {
+                        let node = el.parentElement;
+                        for (let i = 0; i < 6; i++) {
+                            if (!node || node === document.body) break;
+                            const d = node.querySelector(
+                                '[class*="date_title"],[class*="DateTitle"],[class*="DateGroup_title"]'
+                            );
+                            if (d && !el.contains(d)) return d.innerText.trim();
+                            const prev = node.previousElementSibling;
+                            if (prev) {
+                                const cls = prev.getAttribute('class') || '';
+                                if (cls.match(/date|Date/)) return prev.innerText.trim();
+                            }
+                            node = node.parentElement;
+                        }
+                        return '';
+                    }""",
+                    el,
+                )
+
                 if home and away:
                     results.append({
+                        "date": date_txt,
                         "home": home, "away": away,
                         "time": time_txt, "status": status_txt,
                         "group": group_txt, "url": match_url,
                     })
             browser.close()
     except Exception as e:
-        results.append({"home": f"[오류] {e}", "away": "", "time": "", "status": "", "group": "", "url": ""})
+        results.append({"date": "", "home": f"[오류] {e}", "away": "", "time": "", "status": "", "group": "", "url": ""})
     return results
 
 
